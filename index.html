@@ -663,13 +663,6 @@
             <p style="font-size: 12px; color: #666; margin: 0;">💡 Qualquer pessoa pode adicionar sua aposta aqui. O administrador pode ajustar valores e marcar pagamentos.</p>
         </div>
 
-        <div id="firebaseStatus" style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: none;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="firebaseStatusIcon">🔄</span>
-                <span id="firebaseStatusText">Verificando conexão...</span>
-            </div>
-        </div>
-
         <div class="admin-section collapsed" id="adminSection">
             <div class="admin-section-header" onclick="toggleAdminSection()">
                 <div class="admin-info">
@@ -678,6 +671,12 @@
                 <span class="admin-toggle-icon">▼</span>
             </div>
             <div class="admin-section-content">
+                <div id="firebaseStatus" style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                        <span id="firebaseStatusIcon">🔄</span>
+                        <span id="firebaseStatusText">Verificando conexão...</span>
+                    </div>
+                </div>
                 <div class="admin-controls" id="adminControls">
                 <div class="admin-input-wrapper">
                     <input type="password" class="admin-input" id="adminPassword" placeholder="Senha do Administrador" onkeypress="if(event.key === 'Enter') loginAdmin()">
@@ -1461,6 +1460,9 @@
                         } else {
                             renderParticipants();
                         }
+                        // Atualizar status do Firebase após login
+                        const firebaseConnected = useFirebase && database !== null;
+                        updateFirebaseStatus(firebaseConnected);
                         alert('✅ Senha de administrador definida com sucesso!\n\nUse a senha que você acabou de definir para fazer login nas próximas vezes.');
                     } else {
                         alert('⚠️ Senha de administrador não foi definida. Tente novamente.');
@@ -1486,6 +1488,9 @@
                 } else {
                     renderParticipants(); // Re-render para habilitar checkboxes
                 }
+                // Atualizar status do Firebase após login
+                const firebaseConnected = useFirebase && database !== null;
+                updateFirebaseStatus(firebaseConnected);
             } else {
                 alert('❌ Senha incorreta!');
                 document.getElementById('adminPassword').value = '';
@@ -1563,8 +1568,6 @@
                 if (markAllBtn) {
                     markAllBtn.style.display = 'none';
                 }
-                // Esconder status do Firebase para não-admin
-                updateFirebaseStatus(false);
             }
         }
 
