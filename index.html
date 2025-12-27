@@ -188,14 +188,49 @@
         }
 
         .admin-section {
-            padding: 20px 30px;
+            padding: 15px 20px;
             background: #fff3cd;
-            border-bottom: 2px solid #ffc107;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .admin-section-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
+            cursor: pointer;
+            user-select: none;
+            padding: 5px 0;
+        }
+
+        .admin-section-header:hover {
+            opacity: 0.8;
+        }
+
+        .admin-toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+            color: #856404;
+        }
+
+        .admin-section.collapsed .admin-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .admin-section-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s, padding 0.3s;
+            opacity: 1;
+            padding-top: 15px;
+        }
+
+        .admin-section.collapsed .admin-section-content {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
         }
 
         .admin-section.logged-in {
@@ -477,6 +512,9 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         .search-input {
@@ -485,6 +523,9 @@
             border: 2px solid #90CAF9;
             border-radius: 8px;
             font-size: 16px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .search-input:focus {
@@ -565,6 +606,35 @@
             .header h1 {
                 font-size: 1.8em;
             }
+
+            .search-input {
+                font-size: 16px;
+                padding: 12px 40px 12px 35px;
+                width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            .search-section {
+                padding: 15px;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            .search-section h3 {
+                font-size: 1em;
+            }
+
+            .clear-search {
+                right: 10px;
+            }
         }
     </style>
 </head>
@@ -600,11 +670,15 @@
             </div>
         </div>
 
-        <div class="admin-section" id="adminSection">
-            <div class="admin-info">
-                <span class="admin-status" id="adminStatus">🔒 Acesso Restrito - Apenas Administradores</span>
+        <div class="admin-section collapsed" id="adminSection">
+            <div class="admin-section-header" onclick="toggleAdminSection()">
+                <div class="admin-info">
+                    <span class="admin-status" id="adminStatus">🔒 Acesso Restrito - Apenas Administradores</span>
+                </div>
+                <span class="admin-toggle-icon">▼</span>
             </div>
-            <div class="admin-controls" id="adminControls">
+            <div class="admin-section-content">
+                <div class="admin-controls" id="adminControls">
                 <div class="admin-input-wrapper">
                     <input type="password" class="admin-input" id="adminPassword" placeholder="Senha do Administrador" onkeypress="if(event.key === 'Enter') loginAdmin()">
                     <div id="masterPasswordHint" style="display: none; font-size: 11px; color: #666; margin-top: 5px; text-align: left;">
@@ -614,6 +688,7 @@
                 <button class="btn btn-small" onclick="loginAdmin()" id="loginBtn">Entrar</button>
                 <button class="btn btn-small" onclick="logoutAdmin()" id="logoutBtn" style="display: none; background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">Sair</button>
                 <button class="btn btn-small" onclick="resetAdminPassword()" id="resetPasswordBtn" style="display: none; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">Redefinir Senha</button>
+                </div>
             </div>
         </div>
 
@@ -731,6 +806,14 @@
                         oninput="filterParticipants()"
                     >
                     <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()" style="display: none;">×</button>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                    <button class="btn" onclick="showPendingOnly()" id="showPendingBtn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        ⏳ Mostrar Apenas Pendentes
+                    </button>
+                    <button class="btn" onclick="showAllParticipants()" id="showAllBtn" style="display: none; background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                        📋 Mostrar Todos
+                    </button>
                 </div>
                 <div class="search-results-info" id="searchResultsInfo" style="display: none;"></div>
             </div>
@@ -1175,10 +1258,12 @@
                 </div>
             `).join('');
 
-            // Aplicar filtro se houver busca ativa
+            // Aplicar filtro se houver busca ativa ou se estiver mostrando apenas pendentes
             const searchValue = document.getElementById('searchInput')?.value.trim();
             if (searchValue) {
                 filterParticipants();
+            } else if (showingPendingOnly) {
+                showPendingOnly();
             }
 
             updateStats();
@@ -1190,6 +1275,11 @@
             const clearBtn = document.getElementById('clearSearchBtn');
             const resultsInfo = document.getElementById('searchResultsInfo');
             const searchValue = searchInput.value.trim().toLowerCase();
+            
+            // Se estiver mostrando apenas pendentes, resetar
+            if (showingPendingOnly) {
+                showAllParticipants();
+            }
             
             if (!searchValue) {
                 // Mostrar todos
@@ -1251,6 +1341,68 @@
             searchInput.value = '';
             filterParticipants();
             searchInput.focus();
+        }
+
+        let showingPendingOnly = false;
+
+        function showPendingOnly() {
+            showingPendingOnly = true;
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            
+            const pendingParticipants = participants.filter(p => !p.paid);
+            const allCards = document.querySelectorAll('.participant-card');
+            
+            allCards.forEach(card => {
+                const index = parseInt(card.getAttribute('data-index'));
+                const participant = participants[index];
+                
+                if (participant && !participant.paid) {
+                    card.classList.remove('hidden');
+                    card.classList.add('highlight');
+                } else {
+                    card.classList.add('hidden');
+                    card.classList.remove('highlight');
+                }
+            });
+            
+            // Atualizar botões
+            document.getElementById('showPendingBtn').style.display = 'none';
+            document.getElementById('showAllBtn').style.display = 'block';
+            
+            // Atualizar informação
+            const resultsInfo = document.getElementById('searchResultsInfo');
+            if (resultsInfo) {
+                resultsInfo.textContent = `⏳ ${pendingParticipants.length} participante(s) pendente(s)`;
+                resultsInfo.style.display = 'block';
+                resultsInfo.style.color = '#ff9800';
+            }
+        }
+
+        function showAllParticipants() {
+            showingPendingOnly = false;
+            const searchInput = document.getElementById('searchInput');
+            const searchValue = searchInput.value.trim();
+            
+            // Se houver busca ativa, aplicar o filtro de busca
+            if (searchValue) {
+                filterParticipants();
+            } else {
+                // Mostrar todos
+                document.querySelectorAll('.participant-card').forEach(card => {
+                    card.classList.remove('hidden', 'highlight');
+                });
+                
+                // Atualizar informação
+                const resultsInfo = document.getElementById('searchResultsInfo');
+                if (resultsInfo) {
+                    resultsInfo.style.display = 'none';
+                }
+            }
+            
+            // Atualizar botões
+            document.getElementById('showPendingBtn').style.display = 'block';
+            document.getElementById('showAllBtn').style.display = 'none';
         }
 
         function togglePayment(number, name) {
@@ -1423,6 +1575,13 @@
             const loadBaseSection = document.getElementById('loadBaseSection');
             if (loadBaseSection) {
                 loadBaseSection.classList.toggle('expanded');
+            }
+        }
+
+        function toggleAdminSection() {
+            const adminSection = document.getElementById('adminSection');
+            if (adminSection) {
+                adminSection.classList.toggle('collapsed');
             }
         }
 
