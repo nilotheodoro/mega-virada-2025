@@ -773,6 +773,10 @@
                 <div class="stat-label">Participantes</div>
             </div>
             <div class="stat-item">
+                <div class="stat-value" id="totalQuotas">0</div>
+                <div class="stat-label">Cotas (R$ 5,00)</div>
+            </div>
+            <div class="stat-item">
                 <div class="stat-value" id="totalValue">R$ 0,00</div>
                 <div class="stat-label">Total Arrecadado</div>
             </div>
@@ -1593,8 +1597,10 @@
             const totalValue = participants.reduce((sum, p) => sum + p.value, 0);
             const paidValue = participants.filter(p => p.paid).reduce((sum, p) => sum + p.value, 0);
             const pendingValue = totalValue - paidValue;
+            const totalQuotas = totalValue / 5; // Cada cota é R$ 5,00
 
             document.getElementById('totalParticipants').textContent = total;
+            document.getElementById('totalQuotas').textContent = totalQuotas.toFixed(0);
             document.getElementById('totalValue').textContent = formatCurrency(totalValue);
             document.getElementById('paidValue').textContent = formatCurrency(paidValue);
             document.getElementById('pendingValue').textContent = formatCurrency(pendingValue);
@@ -1876,5 +1882,4 @@
     </script>
 </body>
 </html>
-
 
