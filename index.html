@@ -52,6 +52,11 @@
             padding: 30px;
             background: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
+            display: none; /* Oculto por padrão, será mostrado apenas para admin */
+        }
+        
+        .input-section.active {
+            display: block;
         }
 
         .input-group {
@@ -636,6 +641,54 @@
                 right: 10px;
             }
         }
+
+        .scroll-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroll-button:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .scroll-button:active {
+            transform: translateY(-1px) scale(1.05);
+        }
+
+        .scroll-button.top {
+            bottom: 90px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-button {
+                width: 45px;
+                height: 45px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 20px;
+            }
+
+            .scroll-button.top {
+                bottom: 75px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -661,34 +714,6 @@
                 </div>
             </div>
             <p style="font-size: 12px; color: #666; margin: 0;">💡 Qualquer pessoa pode adicionar sua aposta aqui. O administrador pode ajustar valores e marcar pagamentos.</p>
-        </div>
-
-        <div class="admin-section collapsed" id="adminSection">
-            <div class="admin-section-header" onclick="toggleAdminSection()">
-                <div class="admin-info">
-                    <span class="admin-status" id="adminStatus">🔒 Acesso Restrito - Apenas Administradores</span>
-                </div>
-                <span class="admin-toggle-icon">▼</span>
-            </div>
-            <div class="admin-section-content">
-                <div id="firebaseStatus" style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: none;">
-                    <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
-                        <span id="firebaseStatusIcon">🔄</span>
-                        <span id="firebaseStatusText">Verificando conexão...</span>
-                    </div>
-                </div>
-                <div class="admin-controls" id="adminControls">
-                <div class="admin-input-wrapper">
-                    <input type="password" class="admin-input" id="adminPassword" placeholder="Senha do Administrador" onkeypress="if(event.key === 'Enter') loginAdmin()">
-                    <div id="masterPasswordHint" style="display: none; font-size: 11px; color: #666; margin-top: 5px; text-align: left;">
-                        💡 Primeira vez? Digite a senha mestre para configurar
-                    </div>
-                </div>
-                <button class="btn btn-small" onclick="loginAdmin()" id="loginBtn">Entrar</button>
-                <button class="btn btn-small" onclick="logoutAdmin()" id="logoutBtn" style="display: none; background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">Sair</button>
-                <button class="btn btn-small" onclick="resetAdminPassword()" id="resetPasswordBtn" style="display: none; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">Redefinir Senha</button>
-                </div>
-            </div>
         </div>
 
         <div class="input-section">
@@ -818,6 +843,18 @@
                         📋 Mostrar Todos
                     </button>
                 </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; align-items: center;">
+                    <span style="color: #1976D2; font-weight: 600; font-size: 14px;">Ordenar por:</span>
+                    <button class="btn" onclick="sortByNumber()" id="sortByNumberBtn" style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); padding: 10px 20px; font-size: 14px;">
+                        🔢 Número
+                    </button>
+                    <button class="btn" onclick="sortByName()" id="sortByNameBtn" style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); padding: 10px 20px; font-size: 14px;">
+                        👤 Nome
+                    </button>
+                    <button class="btn" onclick="sortByValue()" id="sortByValueBtn" style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); padding: 10px 20px; font-size: 14px;">
+                        💰 Valor
+                    </button>
+                </div>
                 <div class="search-results-info" id="searchResultsInfo" style="display: none;"></div>
             </div>
             <div id="participantsContainer">
@@ -831,7 +868,39 @@
                 </div>
             </div>
         </div>
+
+        <div class="admin-section collapsed" id="adminSection" style="margin-top: 30px;">
+            <div class="admin-section-header" onclick="toggleAdminSection()">
+                <div class="admin-info">
+                    <span class="admin-status" id="adminStatus">🔒 Acesso Restrito - Apenas Administradores</span>
+                </div>
+                <span class="admin-toggle-icon">▼</span>
+            </div>
+            <div class="admin-section-content">
+                <div id="firebaseStatus" style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                        <span id="firebaseStatusIcon">🔄</span>
+                        <span id="firebaseStatusText">Verificando conexão...</span>
+                    </div>
+                </div>
+                <div class="admin-controls" id="adminControls">
+                <div class="admin-input-wrapper">
+                    <input type="password" class="admin-input" id="adminPassword" placeholder="Senha do Administrador" onkeypress="if(event.key === 'Enter') loginAdmin()">
+                    <div id="masterPasswordHint" style="display: none; font-size: 11px; color: #666; margin-top: 5px; text-align: left;">
+                        💡 Primeira vez? Digite a senha mestre para configurar
+                    </div>
+                </div>
+                <button class="btn btn-small" onclick="loginAdmin()" id="loginBtn">Entrar</button>
+                <button class="btn btn-small" onclick="logoutAdmin()" id="logoutBtn" style="display: none; background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">Sair</button>
+                <button class="btn btn-small" onclick="resetAdminPassword()" id="resetPasswordBtn" style="display: none; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">Redefinir Senha</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Botões de navegação rápida -->
+    <button class="scroll-button top" id="scrollToTopBtn" onclick="scrollToTop()" title="Voltar ao topo" style="display: none;">⬆️</button>
+    <button class="scroll-button" id="scrollToBottomBtn" onclick="scrollToBottom()" title="Ir para o fim">⬇️</button>
 
     <script>
         let participants = [];
@@ -1228,8 +1297,8 @@
                 return;
             }
 
-            // Ordenar por número
-            participants.sort((a, b) => a.number - b.number);
+            // Aplicar ordenação baseada no currentSort
+            applySorting();
 
             container.innerHTML = participants.map((p, index) => `
                 <div class="participant-card ${p.paid ? 'paid' : ''} ${!isAdmin ? 'read-only' : 'editable'}" 
@@ -1271,6 +1340,7 @@
 
             updateStats();
             document.getElementById('stats').style.display = 'flex';
+            updateSortButtons();
         }
 
         function filterParticipants() {
@@ -1347,6 +1417,7 @@
         }
 
         let showingPendingOnly = false;
+        let currentSort = 'number'; // 'number', 'name', 'value'
 
         function showPendingOnly() {
             showingPendingOnly = true;
@@ -1406,6 +1477,87 @@
             // Atualizar botões
             document.getElementById('showPendingBtn').style.display = 'block';
             document.getElementById('showAllBtn').style.display = 'none';
+        }
+
+        function applySorting() {
+            switch(currentSort) {
+                case 'number':
+                    participants.sort((a, b) => a.number - b.number);
+                    break;
+                case 'name':
+                    participants.sort((a, b) => {
+                        const nameA = a.name.toLowerCase().trim();
+                        const nameB = b.name.toLowerCase().trim();
+                        return nameA.localeCompare(nameB, 'pt-BR');
+                    });
+                    break;
+                case 'value':
+                    participants.sort((a, b) => b.value - a.value); // Maior para menor
+                    break;
+                default:
+                    participants.sort((a, b) => a.number - b.number);
+            }
+        }
+
+        function updateSortButtons() {
+            const buttons = ['sortByNumberBtn', 'sortByNameBtn', 'sortByValueBtn'];
+            
+            // Verificar se os botões existem
+            const allButtonsExist = buttons.every(btnId => document.getElementById(btnId) !== null);
+            if (!allButtonsExist) {
+                return; // Botões ainda não foram carregados
+            }
+            
+            // Resetar todos os botões
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.style.opacity = '0.7';
+                    btn.style.boxShadow = '';
+                    btn.style.transform = '';
+                }
+            });
+            
+            // Destacar o botão ativo
+            let activeBtnId = '';
+            switch(currentSort) {
+                case 'number':
+                    activeBtnId = 'sortByNumberBtn';
+                    break;
+                case 'name':
+                    activeBtnId = 'sortByNameBtn';
+                    break;
+                case 'value':
+                    activeBtnId = 'sortByValueBtn';
+                    break;
+            }
+            
+            if (activeBtnId) {
+                const activeBtn = document.getElementById(activeBtnId);
+                if (activeBtn) {
+                    activeBtn.style.opacity = '1';
+                    activeBtn.style.boxShadow = '0 4px 15px rgba(156, 39, 176, 0.6)';
+                    activeBtn.style.transform = 'scale(1.05)';
+                }
+            }
+        }
+
+        function sortByNumber() {
+            currentSort = 'number';
+            updateSortButtons();
+            renderParticipants();
+        }
+
+        function sortByName() {
+            currentSort = 'name';
+            updateSortButtons();
+            renderParticipants();
+        }
+
+        function sortByValue() {
+            currentSort = 'value';
+            updateSortButtons();
+            renderParticipants();
         }
 
         function togglePayment(number, name) {
@@ -1526,6 +1678,7 @@
             const loginBtn = document.getElementById('loginBtn');
             const resetPasswordBtn = document.getElementById('resetPasswordBtn');
             const loadBaseSection = document.getElementById('loadBaseSection');
+            const inputSection = document.querySelector('.input-section');
             const savedPassword = getAdminPassword();
             
             if (isAdmin) {
@@ -1538,6 +1691,10 @@
                 if (clearBtn) clearBtn.disabled = false;
                 if (loadBaseSection) {
                     loadBaseSection.classList.add('active');
+                }
+                // Mostrar seção de input apenas para admin
+                if (inputSection) {
+                    inputSection.classList.add('active');
                 }
                 // Mostrar botão "Marcar Todos como Pagos" apenas para admin
                 const markAllBtn = document.getElementById('markAllPaidBtn');
@@ -1566,6 +1723,10 @@
                 if (loadBaseSection) {
                     loadBaseSection.classList.remove('active');
                     loadBaseSection.classList.remove('expanded');
+                }
+                // Ocultar seção de input para não-admin
+                if (inputSection) {
+                    inputSection.classList.remove('active');
                 }
                 // Esconder botão "Marcar Todos como Pagos" para não-admin
                 const markAllBtn = document.getElementById('markAllPaidBtn');
@@ -1879,7 +2040,55 @@
             
             reader.readAsText(file);
         }
+
+        // Funções de navegação rápida
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.documentElement.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Controlar visibilidade dos botões baseado na posição do scroll
+        function toggleScrollButtons() {
+            const scrollTopBtn = document.getElementById('scrollToTopBtn');
+            const scrollBottomBtn = document.getElementById('scrollToBottomBtn');
+            
+            if (scrollTopBtn && scrollBottomBtn) {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight;
+                const clientHeight = document.documentElement.clientHeight;
+                
+                // Mostrar botão "voltar ao topo" quando estiver mais abaixo
+                if (scrollTop > 300) {
+                    scrollTopBtn.style.display = 'flex';
+                } else {
+                    scrollTopBtn.style.display = 'none';
+                }
+                
+                // Ocultar botão "ir para o fim" quando estiver próximo do fim
+                if (scrollTop + clientHeight >= scrollHeight - 100) {
+                    scrollBottomBtn.style.display = 'none';
+                } else {
+                    scrollBottomBtn.style.display = 'flex';
+                }
+            }
+        }
+
+        // Adicionar listener de scroll
+        window.addEventListener('scroll', toggleScrollButtons);
+        
+        // Verificar posição inicial
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(toggleScrollButtons, 100);
+        });
     </script>
 </body>
 </html>
-
